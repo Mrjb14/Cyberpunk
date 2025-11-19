@@ -1,0 +1,18 @@
+# Build output
+bin/
+gen/
+mir/
+internal-mir/
+
+# Generated files
+*.prg
+*.debug.xml
+*-settings.json
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
