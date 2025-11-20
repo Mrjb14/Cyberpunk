@@ -12,6 +12,7 @@
             <listEntry value="0">@Strings.ArcDataBattery</listEntry>
             <listEntry value="1">@Strings.ArcDataSteps</listEntry>
             <listEntry value="2">@Strings.ArcDataCalories</listEntry>
+            <listEntry value="3">@Strings.ArcDataAll</listEntry>
         </settingConfig>
     </setting>
 

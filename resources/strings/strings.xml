@@ -19,6 +19,7 @@
     <string id="ArcDataBattery">Battery</string>
     <string id="ArcDataSteps">Steps</string>
     <string id="ArcDataCalories">Calories</string>
+    <string id="ArcDataAll">All Three</string>
 
     <string id="ColorThemeTitle">Color Theme</string>
     <string id="ThemeCyanNeon">Cyan Neon</string>

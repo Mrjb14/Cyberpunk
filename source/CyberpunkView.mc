@@ -246,6 +246,12 @@ class CyberpunkView extends WatchUi.WatchFace {
             arcDataType = 0; // Batterie par défaut
         }
 
+        // Option 3: Afficher les trois arcs simultanément
+        if (arcDataType == 3) {
+            drawThreeArcs(dc, stats, activityInfo);
+            return;
+        }
+
         var percent = 0;
         var arcColorLight = timeColorLight;
         var arcColorDark = timeColorDark;
@@ -297,6 +303,70 @@ class CyberpunkView extends WatchUi.WatchFace {
         dc.setPenWidth(3 * scale);
         dc.drawArc(centerX, centerY, radius, Graphics.ARC_CLOCKWISE,
                    startAngle, startAngle + sweepAngle);
+    }
+
+    // Dessiner les trois arcs de progression simultanément
+    function drawThreeArcs(dc, stats, activityInfo) {
+        var startAngle = 90; // Commencer en haut (90° = position 12h)
+
+        // Arc 1 (extérieur): Batterie - orange
+        var batteryPercent = stats.battery;
+        var batterySweep = -((batteryPercent * 360) / 100);
+        var radius1 = (screenWidth / 2) - (10 * scale);
+
+        dc.setColor(batteryColorDark, Graphics.COLOR_TRANSPARENT);
+        dc.setPenWidth(4 * scale);
+        dc.drawArc(centerX, centerY, radius1, Graphics.ARC_CLOCKWISE,
+                   startAngle, startAngle + batterySweep);
+
+        dc.setColor(batteryColorLight, Graphics.COLOR_TRANSPARENT);
+        dc.setPenWidth(2 * scale);
+        dc.drawArc(centerX, centerY, radius1, Graphics.ARC_CLOCKWISE,
+                   startAngle, startAngle + batterySweep);
+
+        // Arc 2 (milieu): Steps - vert
+        var stepGoal = Application.Properties.getValue("StepGoal");
+        if (stepGoal == null || stepGoal <= 0) {
+            stepGoal = activityInfo.stepGoal;
+        }
+        var stepsPercent = (activityInfo.steps * 100.0) / stepGoal;
+        if (stepsPercent > 100) { stepsPercent = 100; }
+        var stepsSweep = -((stepsPercent * 360) / 100);
+        var radius2 = radius1 - (8 * scale);
+
+        dc.setColor(stepsColorDark, Graphics.COLOR_TRANSPARENT);
+        dc.setPenWidth(4 * scale);
+        dc.drawArc(centerX, centerY, radius2, Graphics.ARC_CLOCKWISE,
+                   startAngle, startAngle + stepsSweep);
+
+        dc.setColor(stepsColorLight, Graphics.COLOR_TRANSPARENT);
+        dc.setPenWidth(2 * scale);
+        dc.drawArc(centerX, centerY, radius2, Graphics.ARC_CLOCKWISE,
+                   startAngle, startAngle + stepsSweep);
+
+        // Arc 3 (intérieur): Calories - rose
+        var calorieGoal = Application.Properties.getValue("CalorieGoal");
+        if (calorieGoal == null || calorieGoal <= 0) {
+            calorieGoal = 2000;
+        }
+        var caloriesPercent = 0;
+        var calories = activityInfo.calories;
+        if (calories != null) {
+            caloriesPercent = (calories * 100.0) / calorieGoal;
+            if (caloriesPercent > 100) { caloriesPercent = 100; }
+        }
+        var caloriesSweep = -((caloriesPercent * 360) / 100);
+        var radius3 = radius2 - (8 * scale);
+
+        dc.setColor(heartColorDark, Graphics.COLOR_TRANSPARENT);
+        dc.setPenWidth(4 * scale);
+        dc.drawArc(centerX, centerY, radius3, Graphics.ARC_CLOCKWISE,
+                   startAngle, startAngle + caloriesSweep);
+
+        dc.setColor(heartColorLight, Graphics.COLOR_TRANSPARENT);
+        dc.setPenWidth(2 * scale);
+        dc.drawArc(centerX, centerY, radius3, Graphics.ARC_CLOCKWISE,
+                   startAngle, startAngle + caloriesSweep);
     }
 
     // Points décoratifs
@@ -482,6 +552,20 @@ class CyberpunkView extends WatchUi.WatchFace {
         var yPosition = centerY + (30 * scale);
         var iconSize = 12 * scale;
 
+        // Calculer les objectifs atteints
+        var stepGoal = Application.Properties.getValue("StepGoal");
+        if (stepGoal == null || stepGoal <= 0) {
+            stepGoal = activityInfo.stepGoal;
+        }
+        var stepsGoalAchieved = activityInfo.steps >= stepGoal;
+
+        var calorieGoal = Application.Properties.getValue("CalorieGoal");
+        if (calorieGoal == null || calorieGoal <= 0) {
+            calorieGoal = 2000;
+        }
+        var calories = activityInfo.calories;
+        var caloriesGoalAchieved = (calories != null && calories >= calorieGoal);
+
         // Fréquence cardiaque avec dégradé rose
         var heartRate = getHeartRate();
         if (heartRate != null) {
@@ -533,6 +617,11 @@ class CyberpunkView extends WatchUi.WatchFace {
                    orbitronSmallFont, stepsString,
                    Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
 
+        // Icône d'accomplissement pour les steps
+        if (stepsGoalAchieved) {
+            drawAchievementIcon(dc, xPos + (30 * scale), yPosition + (15 * scale), 4 * scale, stepsColorLight);
+        }
+
         // Batterie avec dégradé orange
         var battery = stats.battery.toNumber();
         var batteryString = battery.toString() + "%";
@@ -557,6 +646,12 @@ class CyberpunkView extends WatchUi.WatchFace {
         dc.drawText(xPos + (20 * scale), yPosition,
                    orbitronSmallFont, batteryString,
                    Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+
+        // Icône d'accomplissement pour les calories (affichée sous le coeur - première stat)
+        if (caloriesGoalAchieved) {
+            var heartXPos = centerX - (85 * scale);
+            drawAchievementIcon(dc, heartXPos + (30 * scale), yPosition + (15 * scale), 4 * scale, heartColorLight);
+        }
     }
 
     // Obtenir la fréquence cardiaque
@@ -643,6 +738,41 @@ class CyberpunkView extends WatchUi.WatchFace {
             // Principal
             dc.setColor(batteryColorLight, Graphics.COLOR_TRANSPARENT);
             dc.fillRectangle(x + 2, y - 3, fillWidth, 4);
+        }
+    }
+
+    // Icône d'accomplissement - étoile cyberpunk
+    function drawAchievementIcon(dc, x, y, size, color) {
+        // Dessiner une étoile à 5 branches
+        var outerRadius = size;
+        var innerRadius = size * 0.4;
+
+        // Points de l'étoile
+        var points = new [10];
+        for (var i = 0; i < 10; i++) {
+            var angle = (i * 36) - 90; // -90 pour commencer en haut
+            var radius = (i % 2 == 0) ? outerRadius : innerRadius;
+            var rad = Math.toRadians(angle);
+            points[i] = [
+                x + (radius * Math.cos(rad)),
+                y + (radius * Math.sin(rad))
+            ];
+        }
+
+        // Dessiner l'étoile remplie (ombre)
+        dc.setColor(glowColor, Graphics.COLOR_TRANSPARENT);
+        dc.fillPolygon(points);
+
+        // Dessiner l'étoile principale
+        dc.setColor(color, Graphics.COLOR_TRANSPARENT);
+        dc.fillPolygon(points);
+
+        // Contour de l'étoile pour plus de définition
+        dc.setPenWidth(1);
+        for (var i = 0; i < 10; i++) {
+            var nextI = (i + 1) % 10;
+            dc.drawLine(points[i][0], points[i][1],
+                       points[nextI][0], points[nextI][1]);
         }
     }
 
