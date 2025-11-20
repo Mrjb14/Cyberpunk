@@ -283,7 +283,7 @@ class CyberpunkView extends WatchUi.WatchFace {
 
         var radius = (screenWidth / 2) - (10 * scale);
         var startAngle = 90; // Commencer en haut (90° = position 12h)
-        var sweepAngle = (percent * 270) / 100; // 270° max (3/4 de cercle)
+        var sweepAngle = -((percent * 360) / 100); // 270° max (3/4 de cercle)
 
         // Effet dégradé sur l'arc - dessiner 2 arcs superposés
         // Arc externe (couleur foncée)
