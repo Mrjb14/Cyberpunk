@@ -318,7 +318,7 @@ class CyberpunkView extends WatchUi.WatchFace {
     function drawThreeArcs(dc, stats, activityInfo) {
         var startAngle = 90; // Commencer en haut (90° = position 12h)
         var arcThickness = 3 * scale; // Épaisseur des arcs
-        var arcSpacing = 6 * scale; // Espacement entre les arcs
+        var arcSpacing = 1 * scale; // Espacement entre les arcs
 
         // Arc 1 (extérieur): Batterie - orange
         var batteryPercent = stats.battery;
