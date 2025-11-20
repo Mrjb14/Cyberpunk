@@ -4,6 +4,8 @@ import Toybox.WatchUi;
 
 class CyberpunkApp extends Application.AppBase {
 
+    private var view;
+
     function initialize() {
         AppBase.initialize();
     }
@@ -18,11 +20,15 @@ class CyberpunkApp extends Application.AppBase {
 
     // Return the initial view of your application here
     function getInitialView() as [Views] or [Views, InputDelegates] {
-        return [ new CyberpunkView() ];
+        view = new CyberpunkView();
+        return [ view ];
     }
 
     // New app settings have been received so trigger a UI update
     function onSettingsChanged() as Void {
+        if (view != null) {
+            view.onSettingsChanged();
+        }
         WatchUi.requestUpdate();
     }
 

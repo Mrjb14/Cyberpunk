@@ -170,6 +170,7 @@ class CyberpunkView extends WatchUi.WatchFace {
     // Appelé quand les paramètres changent
     function onSettingsChanged() {
         loadColorTheme();
+        WatchUi.requestUpdate(); // Forcer le rafraîchissement de l'affichage
     }
 
     // Mise à jour principale (appelée chaque seconde en mode 1Hz)
@@ -231,8 +232,16 @@ class CyberpunkView extends WatchUi.WatchFace {
         dc.drawLine(centerX - markerRadius, centerY,
                    centerX - markerRadius + markerLength, centerY);
 
-        // Points décoratifs aux coins
-        drawDecorativePoints(dc);
+        // Points décoratifs aux coins (ne pas afficher si mode "All Three")
+        var arcDataType = Application.Properties.getValue("ArcDataType");
+        if (arcDataType == null) {
+            arcDataType = 0; // Par défaut
+        }
+
+        // Afficher les points décoratifs uniquement si ce n'est pas le mode "All Three" (arcDataType == 3)
+        if (arcDataType.toNumber() != 3) {
+            drawDecorativePoints(dc);
+        }
     }
 
     // Arc de progression circulaire
@@ -308,19 +317,16 @@ class CyberpunkView extends WatchUi.WatchFace {
     // Dessiner les trois arcs de progression simultanément
     function drawThreeArcs(dc, stats, activityInfo) {
         var startAngle = 90; // Commencer en haut (90° = position 12h)
+        var arcThickness = 3 * scale; // Épaisseur des arcs
+        var arcSpacing = 6 * scale; // Espacement entre les arcs
 
         // Arc 1 (extérieur): Batterie - orange
         var batteryPercent = stats.battery;
         var batterySweep = -((batteryPercent * 360) / 100);
         var radius1 = (screenWidth / 2) - (10 * scale);
 
-        dc.setColor(batteryColorDark, Graphics.COLOR_TRANSPARENT);
-        dc.setPenWidth(4 * scale);
-        dc.drawArc(centerX, centerY, radius1, Graphics.ARC_CLOCKWISE,
-                   startAngle, startAngle + batterySweep);
-
         dc.setColor(batteryColorLight, Graphics.COLOR_TRANSPARENT);
-        dc.setPenWidth(2 * scale);
+        dc.setPenWidth(arcThickness);
         dc.drawArc(centerX, centerY, radius1, Graphics.ARC_CLOCKWISE,
                    startAngle, startAngle + batterySweep);
 
@@ -332,15 +338,10 @@ class CyberpunkView extends WatchUi.WatchFace {
         var stepsPercent = (activityInfo.steps * 100.0) / stepGoal;
         if (stepsPercent > 100) { stepsPercent = 100; }
         var stepsSweep = -((stepsPercent * 360) / 100);
-        var radius2 = radius1 - (8 * scale);
-
-        dc.setColor(stepsColorDark, Graphics.COLOR_TRANSPARENT);
-        dc.setPenWidth(4 * scale);
-        dc.drawArc(centerX, centerY, radius2, Graphics.ARC_CLOCKWISE,
-                   startAngle, startAngle + stepsSweep);
+        var radius2 = radius1 - arcThickness - arcSpacing;
 
         dc.setColor(stepsColorLight, Graphics.COLOR_TRANSPARENT);
-        dc.setPenWidth(2 * scale);
+        dc.setPenWidth(arcThickness);
         dc.drawArc(centerX, centerY, radius2, Graphics.ARC_CLOCKWISE,
                    startAngle, startAngle + stepsSweep);
 
@@ -356,15 +357,10 @@ class CyberpunkView extends WatchUi.WatchFace {
             if (caloriesPercent > 100) { caloriesPercent = 100; }
         }
         var caloriesSweep = -((caloriesPercent * 360) / 100);
-        var radius3 = radius2 - (8 * scale);
-
-        dc.setColor(heartColorDark, Graphics.COLOR_TRANSPARENT);
-        dc.setPenWidth(4 * scale);
-        dc.drawArc(centerX, centerY, radius3, Graphics.ARC_CLOCKWISE,
-                   startAngle, startAngle + caloriesSweep);
+        var radius3 = radius2 - arcThickness - arcSpacing;
 
         dc.setColor(heartColorLight, Graphics.COLOR_TRANSPARENT);
-        dc.setPenWidth(2 * scale);
+        dc.setPenWidth(arcThickness);
         dc.drawArc(centerX, centerY, radius3, Graphics.ARC_CLOCKWISE,
                    startAngle, startAngle + caloriesSweep);
     }
